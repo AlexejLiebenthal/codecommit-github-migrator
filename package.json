@@ -1,0 +1,75 @@
+{
+  "name": "codecommit-github-migrator",
+  "version": "0.0.0",
+  "description": "Helps to migrate a CodeCommit repository to GitHub",
+  "author": "Alexej Liebenthal",
+  "bin": {
+    "cgm": "./bin/run"
+  },
+  "homepage": "https://github.com/AlexejLiebenthal/codecommit-github-migrator",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "repository": "AlexejLiebenthal/codecommit-github-migrator",
+  "files": [
+    "/bin",
+    "/dist",
+    "/npm-shrinkwrap.json",
+    "/oclif.manifest.json"
+  ],
+  "dependencies": {
+    "@oclif/core": "^2.3.0",
+    "@oclif/plugin-help": "^5.2.5",
+    "@oclif/plugin-plugins": "^2.3.2"
+  },
+  "devDependencies": {
+    "@oclif/test": "^2.3.7",
+    "@types/chai": "^4.3.4",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^18.14.1",
+    "chai": "^4.3.7",
+    "eslint": "^7.32.0",
+    "eslint-config-oclif": "^4",
+    "eslint-config-oclif-typescript": "^1.0.3",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "mocha": "^10.2.0",
+    "oclif": "^3.7.0",
+    "prettier": "^2.8.4",
+    "shx": "^0.3.4",
+    "ts-node": "^10.9.1",
+    "tslib": "^2.5.0",
+    "typescript": "4.4.4"
+  },
+  "oclif": {
+    "bin": "cgm",
+    "dirname": "cgm",
+    "commands": "./dist/commands",
+    "plugins": [
+      "@oclif/plugin-help",
+      "@oclif/plugin-plugins"
+    ],
+    "topicSeparator": " ",
+    "topics": {
+      "hello": {
+        "description": "Say hello to the world and others"
+      }
+    }
+  },
+  "scripts": {
+    "build": "shx rm -rf dist && tsc -b",
+    "lint": "eslint . --ext .ts --config .eslintrc",
+    "postpack": "shx rm -f oclif.manifest.json",
+    "posttest": "yarn lint",
+    "prepack": "yarn build && oclif manifest && oclif readme",
+    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "version": "oclif readme && git add README.md"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "bugs": "https://github.com/AlexejLiebenthal/codecommit-github-migrator/issues",
+  "keywords": [
+    "oclif"
+  ],
+  "types": "dist/index.d.ts"
+}
