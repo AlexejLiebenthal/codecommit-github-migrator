@@ -1,10 +1,11 @@
 {
   "name": "codecommit-github-migrator",
+  "type": "module",
   "version": "0.0.0",
   "description": "Helps to migrate a CodeCommit repository to GitHub",
   "author": "Alexej Liebenthal",
   "bin": {
-    "cgm": "./bin/run"
+    "cgm": "./bin/run.js"
   },
   "homepage": "https://github.com/AlexejLiebenthal/codecommit-github-migrator",
   "license": "MIT",
@@ -17,15 +18,19 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@oclif/core": "^2.3.0",
-    "@oclif/plugin-help": "^5.2.5",
-    "@oclif/plugin-plugins": "^2.3.2"
+    "@aws-sdk/client-codecommit": "^3.281.0",
+    "@oclif/core": "^2.4.0",
+    "@oclif/plugin-help": "^5.2.6",
+    "execa": "^7.0.0",
+    "inquirer": "^9.1.4"
   },
   "devDependencies": {
-    "@oclif/test": "^2.3.7",
+    "@oclif/test": "^2.3.8",
+    "@tsconfig/node18-strictest-esm": "^1.0.1",
     "@types/chai": "^4.3.4",
+    "@types/inquirer": "^9.0.3",
     "@types/mocha": "^10.0.1",
-    "@types/node": "^18.14.1",
+    "@types/node": "^18.14.2",
     "chai": "^4.3.7",
     "eslint": "^7.32.0",
     "eslint-config-oclif": "^4",
@@ -38,22 +43,17 @@
     "shx": "^0.3.4",
     "ts-node": "^10.9.1",
     "tslib": "^2.5.0",
-    "typescript": "4.4.4"
+    "typescript": "^4.9.5"
   },
   "oclif": {
     "bin": "cgm",
     "dirname": "cgm",
     "commands": "./dist/commands",
     "plugins": [
-      "@oclif/plugin-help",
-      "@oclif/plugin-plugins"
+      "@oclif/plugin-help"
     ],
     "topicSeparator": " ",
-    "topics": {
-      "hello": {
-        "description": "Say hello to the world and others"
-      }
-    }
+    "topics": {}
   },
   "scripts": {
     "build": "shx rm -rf dist && tsc -b",

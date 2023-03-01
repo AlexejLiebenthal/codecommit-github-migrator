@@ -1,14 +1,12 @@
 {
+  "extends": "@tsconfig/node18-strictest-esm/tsconfig.json",
   "compilerOptions": {
-    "declaration": true,
-    "importHelpers": true,
-    "module": "commonjs",
+    "exactOptionalPropertyTypes": false,
     "outDir": "dist",
-    "rootDir": "src",
-    "strict": true,
-    "target": "es2019"
+    "rootDir": "src"
   },
-  "include": [
-    "src/**/*"
-  ]
+  "ts-node": {
+    "esm": true
+  },
+  "include": ["src/**/*"]
 }
