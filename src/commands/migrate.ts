@@ -1,7 +1,7 @@
 import { Command, Flags, ux } from "@oclif/core";
 import { execa, execaCommand, ExecaReturnValue } from "execa";
 import { mkdtemp, rm } from "node:fs/promises";
-import { chdir, cwd, stdin } from "node:process";
+import { chdir, cwd } from "node:process";
 import { join } from "node:path";
 import inquirer from "inquirer";
 import {
@@ -15,19 +15,25 @@ import {
 } from "@aws-sdk/client-codecommit";
 
 export default class Migrate extends Command {
-  static override description = "migrates a CodeCommit Repo to GitHub";
+  static override description = "Migrates a CodeCommit Repo to GitHub";
 
-  static override examples = ["<%= config.bin %> <%= command.id %>"];
+  static override examples = [
+    "<%= config.bin %> <%= command.id %>",
+    "<%= config.bin %> <%= command.id %> -M",
+    "<%= config.bin %> <%= command.id %> -b",
+    "<%= config.bin %> <%= command.id %> -c codecommit://REPO -g https://github.com/ORG/REPO -j https://ACCOUNT.atlassian.net",
+    "<%= config.bin %> <%= command.id %> -h",
+  ];
 
   static override flags = {
     ccRepo: Flags.url({
       char: "c",
-      description: "url of the CodeCommit repo",
+      description: "url of the migration source CodeCommit repo",
       helpValue: "codecommit://REPO",
     }),
     ghRepo: Flags.url({
       char: "g",
-      description: "url of the GitHub repo",
+      description: "url of the migration target GitHub repo",
       helpValue: "https://github.com/ORG/REPO",
     }),
     jiraBase: Flags.url({
@@ -36,16 +42,25 @@ export default class Migrate extends Command {
       helpValue: "https://ACCOUNT.atlassian.net",
     }),
     noMirror: Flags.boolean({
-      char: "p",
+      char: "M",
       description:
         "set if you do not like to mirror the codecommit repo automatically",
+      helpGroup: "git",
     }),
-    help: Flags.help({ char: "h" }),
+    bigFileCleanup: Flags.boolean({
+      char: "b",
+      description:
+        "set if you like/need a `bfg` cleanup of big files over 100MB.\n" +
+        "Can not used together with `--noMirror, -M` flag",
+      exclusive: ["noMirror"],
+      helpGroup: "git",
+    }),
+    help: Flags.help({ char: "h", helpGroup: "help" }),
   };
 
   public async run(): Promise<void> {
     const { flags } = await this.parse(Migrate);
-    const noMirror = flags.noMirror;
+    const { noMirror, bigFileCleanup } = flags;
 
     ux.styledHeader("CGM");
 
@@ -59,7 +74,7 @@ export default class Migrate extends Command {
       ux.styledHeader("Migration");
 
       if (!noMirror) {
-        await mirrorRepo(workDir, ccRepo, ghRepo);
+        await mirrorRepo(workDir, ccRepo, ghRepo, bigFileCleanup);
       }
 
       const formattedPrs = await getCcPrs(ccRepo, jiraBase);
@@ -90,9 +105,9 @@ async function promptProps(flags: {
         name: "hasAllTokens",
         message:
           "You need to have all tokens for AWS CodeCommit and GitHub configured beforehand!\n" +
-          "Did you set all the necessary tokens?",
+          "Did you set/configured all the necessary tokens for AWS and GitHub?",
         type: "confirm",
-        default: true,
+        default: false,
       },
       {
         name: "ghRepo",
@@ -134,24 +149,43 @@ async function prepareMigration() {
   return workDir;
 }
 
-async function mirrorRepo(workDir: string, ccRepo: URL, ghRepo: URL) {
+async function mirrorRepo(
+  workDir: string,
+  ccRepo: URL,
+  ghRepo: URL,
+  bigFileCleanup?: boolean
+) {
   ux.log(`Clone CodeCommit Repo - ${ccRepo}:`);
-  const process = execaCommand(`git clone --bare ${ccRepo} repo-to-migrate`, {
-    all: true,
+  await execaCommand(`git clone --bare ${ccRepo} repo-to-migrate`, {
+    stdio: "inherit",
   });
-  process.all?.on("data", (data: Buffer) => stdin.write(data));
-  await process;
+
+  if (bigFileCleanup) {
+    ux.log(`BFG big file cleanup`);
+    await execaCommand("bfg --strip-blobs-bigger-than 100M repo-to-migrate", {
+      stdio: "inherit",
+    });
+  }
 
   const repoToMigrateDir = join(workDir, "repo-to-migrate");
   chdir(repoToMigrateDir);
   ux.log(`Changed into cloned repo dir: ${repoToMigrateDir}\n`);
 
+  if (bigFileCleanup) {
+    ux.log("git reflog");
+    await execaCommand("git reflog expire --expire=now --all", {
+      stdio: "inherit",
+    });
+    ux.log("git gc");
+    await execaCommand("git gc --prune=now --aggressive", {
+      stdio: "inherit",
+    });
+  }
+
   ux.log(`Push all branches and tags to GitHub - ${ghRepo}\n`);
-  const pushMirror = execaCommand(`git push --mirror ${ghRepo}`, {
-    all: true,
+  await execaCommand(`git push --mirror ${ghRepo}`, {
+    stdio: "inherit",
   });
-  pushMirror.all?.on("data", (data) => stdin.write(data));
-  await pushMirror;
 }
 
 async function getCcPrs(ccRepo: URL, jiraBase: URL) {
@@ -214,9 +248,11 @@ function createBody(
   const issueKeyRegExp = /^([A-Z]+-\d+)/;
   const match = pullRequest.title?.match(issueKeyRegExp);
   const jiraTicket = match?.[1];
-  const jiraUrl = `${jiraBase}/browse/${jiraTicket}`;
+  const jiraUrl = `${jiraBase}browse/${jiraTicket}`;
 
-  const author = pullRequest?.authorArn?.split("/")[2];
+  const author = pullRequest?.authorArn?.split("/")[2]
+    ? pullRequest?.authorArn?.split("/")[2]
+    : pullRequest?.authorArn?.split(":")[5];
 
   const created = pullRequest.creationDate?.toLocaleString("en-de", {
     dateStyle: "medium",
@@ -230,7 +266,7 @@ function createBody(
     (pullRequest.description || "") +
     "\n---\n" +
     `- 🏚️ [Original CodeCommit-PR ${prId}](${ccUrl})\n` +
-    `  - 📧 Author: ${author}\n` +
+    `  - 📧 Author: \`${author}\`\n` +
     `  - 🚀 Created: ${created}\n` +
     `  - 📝 Updated: ${updated}\n` +
     `- 🎟️ [Ticket: ${jiraTicket}](${jiraUrl})\n` +
@@ -272,17 +308,15 @@ async function createGhPrs(
             "--repo",
             `${ghRepo}`,
           ],
-          { all: true }
-        )
-      )
-      .catch((error: ExecaReturnValue) => {
-        if (error.all)
+          { stdio: "inherit", all: true }
+        ).catch((error: ExecaReturnValue) => {
           errors.push({
             command: error.command.slice(0, 200),
-            out: error.all,
+            out: error.all || "",
             status: error.exitCode,
           });
-      })
+        })
+      )
       .finally(() => {
         progress.increment();
       });

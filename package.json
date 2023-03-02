@@ -18,7 +18,7 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@aws-sdk/client-codecommit": "^3.281.0",
+    "@aws-sdk/client-codecommit": "^3.282.0",
     "@oclif/core": "^2.4.0",
     "@oclif/plugin-help": "^5.2.6",
     "execa": "^7.0.0",
@@ -30,7 +30,7 @@
     "@types/chai": "^4.3.4",
     "@types/inquirer": "^9.0.3",
     "@types/mocha": "^10.0.1",
-    "@types/node": "^18.14.2",
+    "@types/node": "^18.14.4",
     "chai": "^4.3.7",
     "eslint": "^7.32.0",
     "eslint-config-oclif": "^4",
