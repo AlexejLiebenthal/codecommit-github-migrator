@@ -19,6 +19,7 @@
   ],
   "dependencies": {
     "@aws-sdk/client-codecommit": "^3.282.0",
+    "@aws-sdk/client-sts": "^3.282.0",
     "@oclif/core": "^2.4.0",
     "@oclif/plugin-help": "^5.2.6",
     "execa": "^7.0.0",

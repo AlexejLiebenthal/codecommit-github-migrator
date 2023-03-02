@@ -6,6 +6,7 @@ import { join } from "node:path";
 import inquirer from "inquirer";
 import {
   CodeCommitClient,
+  CodeCommitClientConfig,
   GetPullRequestCommand,
   GetPullRequestCommandOutput,
   GetRepositoryCommand,
@@ -13,6 +14,7 @@ import {
   PullRequest,
   RepositoryMetadata,
 } from "@aws-sdk/client-codecommit";
+import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 
 export default class Migrate extends Command {
   static override description = "Migrates a CodeCommit Repo to GitHub";
@@ -56,6 +58,32 @@ export default class Migrate extends Command {
       helpGroup: "git",
     }),
     help: Flags.help({ char: "h", helpGroup: "help" }),
+    awsRegion: Flags.string({
+      env: "AWS_REGION",
+      description: "AWS Region can also be set through AWS_REGION env",
+      required: true,
+      helpGroup: "AWS",
+    }),
+    awsAccessKeyId: Flags.string({
+      env: "AWS_ACCESS_KEY_ID",
+      description:
+        "AWS Access Key Id can also be set through AWS_ACCESS_KEY_ID env",
+      required: true,
+      helpGroup: "AWS",
+    }),
+    awsSecretAccessKey: Flags.string({
+      env: "AWS_SECRET_ACCESS_KEY",
+      description:
+        "AWS Secret Access Key can also be set through AWS_SECRET_ACCESS_KEY env",
+      required: true,
+      helpGroup: "AWS",
+    }),
+    awsSessionToken: Flags.string({
+      env: "AWS_SESSION_TOKEN",
+      description:
+        "AWS Session Token can also be set through AWS_SESSION_TOKEN env",
+      helpGroup: "AWS",
+    }),
   };
 
   public async run(): Promise<void> {
@@ -63,6 +91,8 @@ export default class Migrate extends Command {
     const { noMirror, bigFileCleanup } = flags;
 
     ux.styledHeader("CGM");
+
+    const codeCommitConfig = await getCodeCommitConfig(flags);
 
     const { ghRepo, ccRepo, jiraBase, hasAllTokens } = await promptProps(flags);
     if (!hasAllTokens) ux.exit(1);
@@ -77,7 +107,7 @@ export default class Migrate extends Command {
         await mirrorRepo(workDir, ccRepo, ghRepo, bigFileCleanup);
       }
 
-      const formattedPrs = await getCcPrs(ccRepo, jiraBase);
+      const formattedPrs = await getCcPrs(ccRepo, jiraBase, codeCommitConfig);
 
       await createGhPrs(formattedPrs, ghRepo);
     } catch (error: any) {
@@ -86,6 +116,41 @@ export default class Migrate extends Command {
       await cleanup(workDir);
     }
   }
+}
+
+async function getCodeCommitConfig({
+  awsRegion,
+  awsAccessKeyId,
+  awsSecretAccessKey,
+  awsSessionToken,
+}: {
+  awsRegion: string;
+  awsAccessKeyId: string;
+  awsSecretAccessKey: string;
+  awsSessionToken?: string;
+}): Promise<CodeCommitClientConfig> {
+  const config = {
+    region: awsRegion,
+    credentials: {
+      accessKeyId: awsAccessKeyId,
+      secretAccessKey: awsSecretAccessKey,
+      sessionToken: awsSessionToken,
+    },
+  };
+
+  const client = new STSClient(config);
+
+  try {
+    // Send dummy request, to check if the credentials are valid
+    await client.send(new GetCallerIdentityCommand({}));
+  } catch (error: any) {
+    ux.log("Provided AWS Credentials are invalid");
+    ux.error(error);
+  } finally {
+    client.destroy();
+  }
+
+  return config;
 }
 
 async function promptProps(flags: {
@@ -188,9 +253,13 @@ async function mirrorRepo(
   });
 }
 
-async function getCcPrs(ccRepo: URL, jiraBase: URL) {
+async function getCcPrs(
+  ccRepo: URL,
+  jiraBase: URL,
+  codeCommitConfig: CodeCommitClientConfig
+) {
   ux.log("Get all CodeCommit PRs");
-  const client = new CodeCommitClient({});
+  const client = new CodeCommitClient(codeCommitConfig);
   const listPrs = new ListPullRequestsCommand({
     repositoryName: ccRepo.host,
     pullRequestStatus: "open",
