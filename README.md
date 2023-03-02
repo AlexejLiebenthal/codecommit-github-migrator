@@ -4,9 +4,9 @@ codecommit-github-migrator CLI
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/codecommit-github-migrator.svg)](https://npmjs.org/package/codecommit-github-migrator)
-[![CircleCI](https://circleci.com/gh/oclif/hello-world/tree/main.svg?style=shield)](https://circleci.com/gh/oclif/hello-world/tree/main)
+[![CircleCI](https://circleci.com/gh/AlexejLiebenthal/codecommit-github-migrator/tree/main.svg?style=shield)](https://circleci.com/gh/AlexejLiebenthal/codecommit-github-migrator/tree/main)
 [![Downloads/week](https://img.shields.io/npm/dw/codecommit-github-migrator.svg)](https://npmjs.org/package/codecommit-github-migrator)
-[![License](https://img.shields.io/npm/l/codecommit-github-migrator.svg)](https://github.com/oclif/hello-world/blob/main/package.json)
+[![License](https://img.shields.io/npm/l/codecommit-github-migrator.svg)](https://github.com/AlexejLiebenthal/codecommit-github-migrator/blob/main/package.json)
 
 <!-- toc -->
 * [codecommit-github-migrator](#codecommit-github-migrator)
