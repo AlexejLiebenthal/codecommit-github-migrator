@@ -22,7 +22,7 @@ $ npm install -g codecommit-github-migrator
 $ cgm COMMAND
 running command...
 $ cgm (--version)
-codecommit-github-migrator/0.2.0 darwin-arm64 node-v18.14.2
+codecommit-github-migrator/0.2.1 darwin-arm64 node-v18.14.2
 $ cgm --help [COMMAND]
 USAGE
   $ cgm COMMAND
@@ -106,5 +106,5 @@ EXAMPLES
   $ cgm migrate -h
 ```
 
-_See code: [dist/commands/migrate.ts](https://github.com/AlexejLiebenthal/codecommit-github-migrator/blob/v0.2.0/dist/commands/migrate.ts)_
+_See code: [dist/commands/migrate.ts](https://github.com/AlexejLiebenthal/codecommit-github-migrator/blob/v0.2.1/dist/commands/migrate.ts)_
 <!-- commandsstop -->
