@@ -1,5 +1,5 @@
 import { Command, Flags, ux } from "@oclif/core";
-import { execa, execaCommand, ExecaReturnValue } from "execa";
+import { execaCommand } from "execa";
 import { mkdtemp, rm } from "node:fs/promises";
 import { chdir, cwd } from "node:process";
 import { join } from "node:path";
@@ -15,6 +15,8 @@ import {
   RepositoryMetadata,
 } from "@aws-sdk/client-codecommit";
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
+import { fromIni } from "@aws-sdk/credential-providers";
+import { Octokit } from "@octokit/rest";
 
 export default class Migrate extends Command {
   static override description = "Migrates a CodeCommit Repo to GitHub";
@@ -36,6 +38,7 @@ export default class Migrate extends Command {
     ghRepo: Flags.url({
       char: "g",
       description: "url of the migration target GitHub repo",
+      parse: async (input) => validateGhRepoUrl(input),
       helpValue: "https://github.com/ORG/REPO",
     }),
     jiraBase: Flags.url({
@@ -61,28 +64,41 @@ export default class Migrate extends Command {
     awsRegion: Flags.string({
       env: "AWS_REGION",
       description: "AWS Region can also be set through AWS_REGION env",
-      required: true,
+      default: "eu-central-1",
       helpGroup: "AWS",
     }),
     awsAccessKeyId: Flags.string({
       env: "AWS_ACCESS_KEY_ID",
       description:
         "AWS Access Key Id can also be set through AWS_ACCESS_KEY_ID env",
-      required: true,
       helpGroup: "AWS",
+      dependsOn: ["awsSecretAccessKey"],
     }),
     awsSecretAccessKey: Flags.string({
       env: "AWS_SECRET_ACCESS_KEY",
       description:
         "AWS Secret Access Key can also be set through AWS_SECRET_ACCESS_KEY env",
-      required: true,
       helpGroup: "AWS",
+      dependsOn: ["awsAccessKeyId"],
     }),
     awsSessionToken: Flags.string({
       env: "AWS_SESSION_TOKEN",
       description:
         "AWS Session Token can also be set through AWS_SESSION_TOKEN env",
       helpGroup: "AWS",
+      dependsOn: ["awsAccessKeyId", "awsSecretAccessKey"],
+    }),
+    awsProfile: Flags.string({
+      env: "AWS_PROFILE",
+      description:
+        "AWS Profile to use for credentials can also be set through AWS_PROFILE env\n" +
+        "If awsProfile flag is provided, the profile will be used instead of `awsAccessKeyId` and `awsSecretAccessKey`",
+      helpGroup: "AWS",
+    }),
+    ghToken: Flags.string({
+      env: "GITHUB_TOKEN",
+      description: "GitHub Token can also be set through GITHUB_TOKEN env",
+      helpGroup: "GitHub",
     }),
   };
 
@@ -93,9 +109,12 @@ export default class Migrate extends Command {
     ux.styledHeader("CGM");
 
     const codeCommitConfig = await getCodeCommitConfig(flags);
+    const ghToken = await getGithubToken(flags);
 
     const { ghRepo, ccRepo, jiraBase, hasAllTokens } = await promptProps(flags);
     if (!hasAllTokens) ux.exit(1);
+
+    const ownerRepo = await checkIfGhRepoExists(ghRepo, ghToken);
 
     ux.styledHeader("Prepare Migration");
     const workDir = await prepareMigration();
@@ -109,7 +128,7 @@ export default class Migrate extends Command {
 
       const formattedPrs = await getCcPrs(ccRepo, jiraBase, codeCommitConfig);
 
-      await createGhPrs(formattedPrs, ghRepo);
+      await createGhPrs(formattedPrs, ownerRepo, ghToken);
     } catch (error: any) {
       ux.log(error);
     } finally {
@@ -123,26 +142,47 @@ async function getCodeCommitConfig({
   awsAccessKeyId,
   awsSecretAccessKey,
   awsSessionToken,
+  awsProfile,
 }: {
-  awsRegion: string;
-  awsAccessKeyId: string;
-  awsSecretAccessKey: string;
+  awsRegion?: string;
+  awsAccessKeyId?: string;
+  awsSecretAccessKey?: string;
   awsSessionToken?: string;
+  awsProfile?: string;
 }): Promise<CodeCommitClientConfig> {
+  ux.log("validate aws config\n");
+  const credentials = awsProfile
+    ? fromIni({
+        profile: awsProfile,
+        mfaCodeProvider: () =>
+          inquirer
+            .prompt({
+              type: "input",
+              name: "otp",
+              message: "AWS OTP?",
+            })
+            .then((answer) => answer.otp),
+      })
+    : awsAccessKeyId && awsSecretAccessKey
+    ? {
+        accessKeyId: awsAccessKeyId,
+        secretAccessKey: awsSecretAccessKey,
+        sessionToken: awsSessionToken,
+      }
+    : undefined;
+
   const config = {
     region: awsRegion,
-    credentials: {
-      accessKeyId: awsAccessKeyId,
-      secretAccessKey: awsSecretAccessKey,
-      sessionToken: awsSessionToken,
-    },
+    credentials,
   };
 
   const client = new STSClient(config);
-
   try {
     // Send dummy request, to check if the credentials are valid
-    await client.send(new GetCallerIdentityCommand({}));
+    ux.styledJSON({
+      awsArn: (await client.send(new GetCallerIdentityCommand({}))).Arn,
+    });
+    ux.log();
   } catch (error: any) {
     ux.log("Provided AWS Credentials are invalid");
     ux.error(error);
@@ -151,6 +191,28 @@ async function getCodeCommitConfig({
   }
 
   return config;
+}
+
+async function getGithubToken({ ghToken }: { ghToken?: string }) {
+  ux.log("validate github token\n");
+
+  let token = "";
+  try {
+    token = ghToken ? ghToken : (await execaCommand("gh auth token")).stdout;
+    ux.styledJSON(
+      await new Octokit({
+        auth: token,
+      }).rest.users
+        .getAuthenticated()
+        .then((user) => ({ githubLogin: user.data.login }))
+    );
+    ux.log();
+  } catch (error: any) {
+    ux.log("Couldn't get a GitHub Token");
+    ux.error(error);
+  }
+
+  return token;
 }
 
 async function promptProps(flags: {
@@ -170,7 +232,7 @@ async function promptProps(flags: {
         name: "hasAllTokens",
         message:
           "You need to have all tokens for AWS CodeCommit and GitHub configured beforehand!\n" +
-          "Did you set/configured all the necessary tokens for AWS and GitHub?",
+          "Are you sure you set/configured all the necessary tokens for AWS and GitHub correctly?",
         type: "confirm",
         default: false,
       },
@@ -178,21 +240,21 @@ async function promptProps(flags: {
         name: "ghRepo",
         message: "GitHub Repo URL",
         default: "https://github.com/ORG/REPO",
-        filter: (r) => new URL(r),
+        filter: (url) => validateGhRepoUrl(url),
         when: ({ hasAllTokens, ghRepo }) => hasAllTokens && !ghRepo,
       },
       {
         name: "ccRepo",
         message: "CodeCommit Repo URL",
         default: "codecommit://REPO",
-        filter: (r) => new URL(r),
+        filter: (url) => new URL(url),
         when: ({ hasAllTokens, ccRepo }) => hasAllTokens && !ccRepo,
       },
       {
         name: "jiraBase",
         message: "CodeCommit Repo URL",
         default: "https://ACCOUNT.atlassian.net",
-        filter: (r) => new URL(r),
+        filter: (url) => new URL(url),
         when: ({ hasAllTokens, jiraBase }) => hasAllTokens && !jiraBase,
       },
     ],
@@ -202,6 +264,17 @@ async function promptProps(flags: {
       jiraBase: flags.jiraBase,
     }
   );
+}
+
+const ghRegex =
+  /^(?:https?:\/\/github\.com\/|git@github\.com:)?([\w-]+)\/([\w-]+)(?:\.git)?$/;
+
+function validateGhRepoUrl(url: string): URL {
+  if (!ghRegex.test(url))
+    throw new Error(
+      `Invalid URL "${url}". Please provide the URL in this format: https://github.com/ORG/REPO`
+    );
+  return new URL(url);
 }
 
 async function prepareMigration() {
@@ -347,45 +420,44 @@ function createBody(
 
 async function createGhPrs(
   formattedPrs: { title: string; body: string; base: string; head: string }[],
-  ghRepo: URL
+  { owner, repo }: { owner: string; repo: string },
+  ghToken: string
 ) {
   ux.log(`Create PRs on GitHub`);
   const progress = ux.progress();
   progress.start(formattedPrs.length, 0);
 
-  const errors: { command: string; out: string; status: number }[] = [];
+  const errors: {
+    params: (typeof formattedPrs)[number] & { repo: string };
+    errorMessage: string;
+  }[] = [];
 
+  const octokit = new Octokit({ auth: ghToken });
   for (const pr of formattedPrs) {
     // a little time out so we are not hitting the quota limit
     // eslint-disable-next-line no-await-in-loop
     await sleep(5000)
       .then(() =>
-        execa(
-          "gh",
-          [
-            "pr",
-            "create",
-            "--draft",
-            "--head",
-            pr.head,
-            "--base",
-            pr.base,
-            "--title",
-            pr.title,
-            "--body",
-            pr.body,
-            "--repo",
-            `${ghRepo}`,
-          ],
-          { stdio: "inherit", all: true }
-        ).catch((error: ExecaReturnValue) => {
-          errors.push({
-            command: error.command.slice(0, 200),
-            out: error.all || "",
-            status: error.exitCode,
-          });
+        octokit.pulls.create({
+          draft: true,
+          head: pr.head,
+          base: pr.base,
+          title: pr.title,
+          body: pr.body,
+          owner: owner,
+          repo: repo,
         })
       )
+      .catch((error: Error) => {
+        errors.push({
+          params: {
+            ...pr,
+            body: pr.body.slice(0, 200),
+            repo: `${owner}/${repo}`,
+          },
+          errorMessage: error.message,
+        });
+      })
       .finally(() => {
         progress.increment();
       });
@@ -406,4 +478,32 @@ async function cleanup(workDir: string) {
   ux.styledHeader("cleanup");
   ux.log(`remove workdir: ${workDir}\n`);
   await rm(workDir, { recursive: true });
+}
+
+async function checkIfGhRepoExists(ghRepo: URL, ghToken: string) {
+  ux.log(`Checking if ${ghRepo} exists`);
+  const octokit = new Octokit({ auth: ghToken });
+  const { owner, repo } = parseOwnerAndRepoFromURL(ghRepo);
+
+  try {
+    await octokit.repos.get({ owner, repo });
+    ux.log(`Found repo "${owner}/${repo}"`);
+  } catch (error: any) {
+    ux.log(`Couldn't access repo "${owner}/${repo}"`);
+    ux.error(error);
+  }
+
+  return { owner, repo };
+}
+
+function parseOwnerAndRepoFromURL(ghRepo: URL) {
+  const match = `${ghRepo}`.match(ghRegex);
+  if (!match) {
+    ux.error(`"${ghRepo}" does not match a GitHub Repo URL`);
+  }
+
+  return {
+    owner: match![1] as string,
+    repo: match![2] as string,
+  };
 }
