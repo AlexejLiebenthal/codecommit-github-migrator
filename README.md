@@ -10,10 +10,10 @@ This tool helps to migrate repositories from CodeCommit with all open PullReques
 # TOC
 
 <!-- toc -->
-
-- [codecommit-github-migrator](#codecommit-github-migrator)
-- [Usage](#usage)
-- [Commands](#commands)
+* [codecommit-github-migrator (`cgm`)](#codecommit-github-migrator-cgm)
+* [TOC](#toc)
+* [Usage](#usage)
+* [Commands](#commands)
 <!-- tocstop -->
 
 # Usage
@@ -31,27 +31,24 @@ If you don't provide any auth flags AWS will fallback to your `.aws/credentials`
 ## Install `cgm`
 
 <!-- usage -->
-
 ```sh-session
 $ npm install -g codecommit-github-migrator
 $ cgm COMMAND
 running command...
 $ cgm (--version)
-codecommit-github-migrator/0.2.1 darwin-arm64 node-v18.14.2
+codecommit-github-migrator/0.2.2 darwin-arm64 node-v18.14.2
 $ cgm --help [COMMAND]
 USAGE
   $ cgm COMMAND
 ...
 ```
-
 <!-- usagestop -->
 
 # Commands
 
 <!-- commands -->
-
-- [`cgm help [COMMANDS]`](#cgm-help-commands)
-- [`cgm migrate`](#cgm-migrate)
+* [`cgm help [COMMANDS]`](#cgm-help-commands)
+* [`cgm migrate`](#cgm-migrate)
 
 ## `cgm help [COMMANDS]`
 
@@ -123,6 +120,5 @@ EXAMPLES
   $ cgm migrate -h
 ```
 
-_See code: [dist/commands/migrate.ts](https://github.com/AlexejLiebenthal/codecommit-github-migrator/blob/v0.2.1/dist/commands/migrate.ts)_
-
+_See code: [dist/commands/migrate.ts](https://github.com/AlexejLiebenthal/codecommit-github-migrator/blob/v0.2.2/dist/commands/migrate.ts)_
 <!-- commandsstop -->
