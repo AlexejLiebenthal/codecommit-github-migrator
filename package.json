@@ -73,7 +73,12 @@
   },
   "bugs": "https://github.com/AlexejLiebenthal/codecommit-github-migrator/issues",
   "keywords": [
-    "oclif"
+    "oclif",
+    "codecommit",
+    "github",
+    "migration",
+    "migrator",
+    "cli"
   ],
   "types": "dist/index.d.ts"
 }
