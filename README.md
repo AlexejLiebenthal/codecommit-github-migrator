@@ -22,7 +22,7 @@ $ npm install -g codecommit-github-migrator
 $ cgm COMMAND
 running command...
 $ cgm (--version)
-codecommit-github-migrator/0.1.1 darwin-arm64 node-v18.14.2
+codecommit-github-migrator/0.2.0 darwin-arm64 node-v18.14.2
 $ cgm --help [COMMAND]
 USAGE
   $ cgm COMMAND
@@ -62,8 +62,9 @@ Migrates a CodeCommit Repo to GitHub
 
 ```
 USAGE
-  $ cgm migrate --awsRegion <value> --awsAccessKeyId <value> --awsSecretAccessKey <value> [-c <value>] [-g
-    <value>] [-j <value>] [-b | -M] [-h] [--awsSessionToken <value>]
+  $ cgm migrate [-c <value>] [-g <value>] [-j <value>] [-b | -M] [-h] [--awsRegion <value>]
+    [--awsSessionToken <value> [--awsAccessKeyId <value> --awsSecretAccessKey <value>] ] [--awsProfile <value>]
+    [--ghToken <value>]
 
 FLAGS
   -c, --ccRepo=codecommit://REPO                url of the migration source CodeCommit repo
@@ -79,10 +80,16 @@ HELP FLAGS
   -h, --help  Show CLI help.
 
 AWS FLAGS
-  --awsAccessKeyId=<value>      (required) AWS Access Key Id can also be set through AWS_ACCESS_KEY_ID env
-  --awsRegion=<value>           (required) AWS Region can also be set through AWS_REGION env
-  --awsSecretAccessKey=<value>  (required) AWS Secret Access Key can also be set through AWS_SECRET_ACCESS_KEY env
+  --awsAccessKeyId=<value>      AWS Access Key Id can also be set through AWS_ACCESS_KEY_ID env
+  --awsProfile=<value>          AWS Profile to use for credentials can also be set through AWS_PROFILE env
+                                If awsProfile flag is provided, the profile will be used instead of `awsAccessKeyId` and
+                                `awsSecretAccessKey`
+  --awsRegion=<value>           [default: eu-central-1] AWS Region can also be set through AWS_REGION env
+  --awsSecretAccessKey=<value>  AWS Secret Access Key can also be set through AWS_SECRET_ACCESS_KEY env
   --awsSessionToken=<value>     AWS Session Token can also be set through AWS_SESSION_TOKEN env
+
+GITHUB FLAGS
+  --ghToken=<value>  GitHub Token can also be set through GITHUB_TOKEN env
 
 DESCRIPTION
   Migrates a CodeCommit Repo to GitHub
@@ -99,5 +106,5 @@ EXAMPLES
   $ cgm migrate -h
 ```
 
-_See code: [dist/commands/migrate.ts](https://github.com/AlexejLiebenthal/codecommit-github-migrator/blob/v0.1.1/dist/commands/migrate.ts)_
+_See code: [dist/commands/migrate.ts](https://github.com/AlexejLiebenthal/codecommit-github-migrator/blob/v0.2.0/dist/commands/migrate.ts)_
 <!-- commandsstop -->
