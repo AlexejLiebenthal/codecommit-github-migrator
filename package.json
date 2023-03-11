@@ -28,7 +28,7 @@
     "inquirer": "^9.1.4"
   },
   "devDependencies": {
-    "@oclif/test": "^2.3.8",
+    "@oclif/test": "^2.3.10",
     "@tsconfig/node18-strictest-esm": "^1.0.1",
     "@types/chai": "^4.3.4",
     "@types/inquirer": "^9.0.3",
