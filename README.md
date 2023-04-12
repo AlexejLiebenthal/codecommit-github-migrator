@@ -33,7 +33,7 @@ $ npm install -g codecommit-github-migrator
 $ cgm COMMAND
 running command...
 $ cgm (--version)
-codecommit-github-migrator/0.2.3 darwin-arm64 node-v18.14.2
+codecommit-github-migrator/0.2.4 darwin-arm64 node-v18.15.0
 $ cgm --help [COMMAND]
 USAGE
   $ cgm COMMAND
@@ -65,7 +65,7 @@ DESCRIPTION
   Display help for cgm.
 ```
 
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v5.2.6/src/commands/help.ts)_
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v5.2.9/src/commands/help.ts)_
 
 ## `cgm migrate`
 
@@ -117,5 +117,5 @@ EXAMPLES
   $ cgm migrate -h
 ```
 
-_See code: [dist/commands/migrate.ts](https://github.com/AlexejLiebenthal/codecommit-github-migrator/blob/v0.2.3/dist/commands/migrate.ts)_
+_See code: [dist/commands/migrate.ts](https://github.com/AlexejLiebenthal/codecommit-github-migrator/blob/v0.2.4/dist/commands/migrate.ts)_
 <!-- commandsstop -->

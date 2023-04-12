@@ -1,7 +1,7 @@
 {
   "name": "codecommit-github-migrator",
   "type": "module",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Helps to migrate a CodeCommit repository to GitHub",
   "author": "Alexej Liebenthal",
   "bin": {
