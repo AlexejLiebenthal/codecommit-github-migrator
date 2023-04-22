@@ -20,7 +20,7 @@
   "dependencies": {
     "@aws-sdk/client-codecommit": "^3.310.0",
     "@aws-sdk/client-sts": "^3.310.0",
-    "@aws-sdk/credential-providers": "^3.310.0",
+    "@aws-sdk/credential-providers": "^3.316.0",
     "@oclif/core": "^2.8.1",
     "@oclif/plugin-help": "^5.2.9",
     "@octokit/rest": "^19.0.7",
