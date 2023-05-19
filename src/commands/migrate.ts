@@ -1,5 +1,5 @@
 import { Command, Flags, ux } from "@oclif/core";
-import { execaCommand } from "execa";
+import { $ } from "execa";
 import { mkdtemp, rm } from "node:fs/promises";
 import { chdir, cwd } from "node:process";
 import { join } from "node:path";
@@ -18,6 +18,7 @@ import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import { fromIni } from "@aws-sdk/credential-providers";
 import { Octokit } from "@octokit/rest";
 
+const $$ = $({ stdio: "inherit" });
 export default class Migrate extends Command {
   static override description = "Migrates a CodeCommit Repo to GitHub";
 
@@ -198,7 +199,7 @@ async function getGithubToken({ ghToken }: { ghToken?: string }) {
 
   let token = "";
   try {
-    token = ghToken ? ghToken : (await execaCommand("gh auth token")).stdout;
+    token = ghToken ? ghToken : (await $$`gh auth token`).stdout;
     ux.styledJSON(
       await new Octokit({
         auth: token,
@@ -294,15 +295,11 @@ async function mirrorRepo(
   bigFileCleanup?: boolean
 ) {
   ux.log(`Clone CodeCommit Repo - ${ccRepo}:`);
-  await execaCommand(`git clone --bare ${ccRepo} repo-to-migrate`, {
-    stdio: "inherit",
-  });
+  await $$`git clone --bare ${ccRepo.toString()} repo-to-migrate`;
 
   if (bigFileCleanup) {
     ux.log(`BFG big file cleanup`);
-    await execaCommand("bfg --strip-blobs-bigger-than 100M repo-to-migrate", {
-      stdio: "inherit",
-    });
+    await $$`bfg --strip-blobs-bigger-than 100M repo-to-migrate`;
   }
 
   const repoToMigrateDir = join(workDir, "repo-to-migrate");
@@ -311,19 +308,14 @@ async function mirrorRepo(
 
   if (bigFileCleanup) {
     ux.log("git reflog");
-    await execaCommand("git reflog expire --expire=now --all", {
-      stdio: "inherit",
-    });
+    await $$`git reflog expire --expire=now --all`;
+
     ux.log("git gc");
-    await execaCommand("git gc --prune=now --aggressive", {
-      stdio: "inherit",
-    });
+    await $$`git gc --prune=now --aggressive`;
   }
 
   ux.log(`Push all branches and tags to GitHub - ${ghRepo}\n`);
-  await execaCommand(`git push --mirror ${ghRepo}`, {
-    stdio: "inherit",
-  });
+  await $$`git push --mirror ${ghRepo.toString()}`;
 }
 
 async function getCcPrs(

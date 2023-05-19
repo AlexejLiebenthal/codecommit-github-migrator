@@ -18,19 +18,19 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@aws-sdk/client-codecommit": "^3.310.0",
-    "@aws-sdk/client-sts": "^3.310.0",
-    "@aws-sdk/credential-providers": "^3.310.0",
-    "@oclif/core": "^2.8.1",
+    "@aws-sdk/client-codecommit": "^3.335.0",
+    "@aws-sdk/client-sts": "^3.335.0",
+    "@aws-sdk/credential-providers": "^3.335.0",
+    "@oclif/core": "^2.8.5",
     "@oclif/plugin-help": "^5.2.9",
-    "@octokit/rest": "^19.0.7",
+    "@octokit/rest": "^19.0.8",
     "execa": "^7.1.1",
-    "inquirer": "^9.1.5"
+    "inquirer": "^9.2.4"
   },
   "devDependencies": {
-    "@oclif/test": "^2.3.15",
+    "@oclif/test": "^2.3.20",
     "@tsconfig/node18-strictest-esm": "^1.0.1",
-    "@types/chai": "^4.3.4",
+    "@types/chai": "^4.3.5",
     "@types/inquirer": "^9.0.3",
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.15.11",
@@ -41,11 +41,11 @@
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
     "mocha": "^10.2.0",
-    "oclif": "^3.7.3",
-    "prettier": "^2.8.7",
+    "oclif": "^3.9.0",
+    "prettier": "^2.8.8",
     "shx": "^0.3.4",
     "ts-node": "^10.9.1",
-    "tslib": "^2.5.0",
+    "tslib": "^2.5.2",
     "typescript": "^4.9.5"
   },
   "oclif": {
