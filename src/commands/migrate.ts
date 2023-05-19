@@ -17,6 +17,7 @@ import {
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import { fromIni } from "@aws-sdk/credential-providers";
 import { Octokit } from "@octokit/rest";
+import { boolean } from "@oclif/core/lib/flags";
 
 const $$ = $({ stdio: "inherit" });
 export default class Migrate extends Command {
@@ -313,6 +314,10 @@ async function mirrorRepo(
     ux.log("git gc");
     await $$`git gc --prune=now --aggressive`;
   }
+
+  await ux.anykey(
+    `Press any key when you are ready (e.g. after disconnecting VPN) to push repo to: ${ghRepo}`
+  );
 
   ux.log(`Push all branches and tags to GitHub - ${ghRepo}\n`);
   await $$`git push --mirror ${ghRepo.toString()}`;
