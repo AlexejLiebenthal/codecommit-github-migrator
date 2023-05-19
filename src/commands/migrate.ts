@@ -199,7 +199,7 @@ async function getGithubToken({ ghToken }: { ghToken?: string }) {
 
   let token = "";
   try {
-    token = ghToken ? ghToken : (await $$`gh auth token`).stdout;
+    token = ghToken ? ghToken : (await $`gh auth token`).stdout;
     ux.styledJSON(
       await new Octokit({
         auth: token,
