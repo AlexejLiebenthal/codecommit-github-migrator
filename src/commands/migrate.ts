@@ -17,7 +17,6 @@ import {
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import { fromIni } from "@aws-sdk/credential-providers";
 import { Octokit } from "@octokit/rest";
-import { boolean } from "@oclif/core/lib/flags";
 
 const $$ = $({ stdio: "inherit" });
 export default class Migrate extends Command {
