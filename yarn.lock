@@ -1595,10 +1595,10 @@
     "@octokit/plugin-request-log" "^1.0.4"
     "@octokit/plugin-rest-endpoint-methods" "^5.12.0"
 
-"@octokit/rest@^19.0.8":
-  version "19.0.8"
-  resolved "https://registry.yarnpkg.com/@octokit/rest/-/rest-19.0.8.tgz#db1e67cb66018859fde2c6c3a49eb5c55dc04d92"
-  integrity sha512-/PKrzqn+zDzXKwBMwLI2IKrvk8yv8cedJOdcmxrjR3gmu6UIzURhP5oQj+4qkn7+uQi1gg7QqV4SqlaQ1HYW1Q==
+"@octokit/rest@^19.0.10":
+  version "19.0.10"
+  resolved "https://registry.yarnpkg.com/@octokit/rest/-/rest-19.0.10.tgz#b3d904de01b8f29a4d9d2f9ff6be6c75e6742575"
+  integrity sha512-+HxOf2GRHRRsKGc1FN6+ULC09BhBGUr1EOvQYAnvVV7DUXyY7MLdHSqOSSvf7Lqnry8YzHTSGgRGYIy/cT0hAg==
   dependencies:
     "@octokit/core" "^4.1.0"
     "@octokit/plugin-paginate-rest" "^6.1.0"
