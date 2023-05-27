@@ -23,7 +23,7 @@
     "@aws-sdk/credential-providers": "^3.335.0",
     "@oclif/core": "^2.8.5",
     "@oclif/plugin-help": "^5.2.9",
-    "@octokit/rest": "^19.0.8",
+    "@octokit/rest": "^19.0.11",
     "execa": "^7.1.1",
     "inquirer": "^9.2.4"
   },
