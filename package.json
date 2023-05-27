@@ -18,7 +18,7 @@
     "/oclif.manifest.json"
   ],
   "dependencies": {
-    "@aws-sdk/client-codecommit": "^3.335.0",
+    "@aws-sdk/client-codecommit": "^3.341.0",
     "@aws-sdk/client-sts": "^3.335.0",
     "@aws-sdk/credential-providers": "^3.335.0",
     "@oclif/core": "^2.8.5",
