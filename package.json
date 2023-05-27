@@ -25,7 +25,7 @@
     "@oclif/plugin-help": "^5.2.9",
     "@octokit/rest": "^19.0.8",
     "execa": "^7.1.1",
-    "inquirer": "^9.2.4"
+    "inquirer": "^9.2.6"
   },
   "devDependencies": {
     "@oclif/test": "^2.3.20",
